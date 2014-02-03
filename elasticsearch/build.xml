@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @author Michael Vogel -->
+<project name="elasticsearch" default="start-elasticsearch" basedir=".">
+
+	<!-- ======================================================================= -->
+	<!-- SET PROPERTIES -->
+	<!-- ======================================================================= -->
+
+	<!-- Load environment vars first -->
+	<property environment="env" />
+	<exec executable="hostname" outputproperty="hostname" />
+	<filter token="localhost.hostname" value="${hostname}" />
+
+	<!-- Load hostname-specific overrides -->
+	<property file="${basedir}/builder-overrides/host-${hostname}.properties" />
+
+	<!-- Load user-specific overrides -->
+	<property file="${basedir}/builder-overrides/user-${user.name}.properties" />
+
+	<!-- Load defaults -->
+	<property file="build.properties" />
+
+	<!-- =================================================================== -->
+	<!-- MACROS -->
+	<!-- =================================================================== -->
+
+	<macrodef name="start-logstash">
+		<attribute name="mode" default="${mode}" description="Logstash mode, possible values are shipper, indexer" />
+		<attribute name="args" description="Arguments to pass to logstash" />
+		<sequential>
+			<get-config-file var="config.file" mode="@{mode}" />
+			<get-config-contents var="logstash.config.contents" config.file="${config.dir}/${config.file}" server.file="${server.file}" />
+			<property name="logstash.args" value="agent -f ${build.dir}/${config.file} -- web" />
+			<echo message="Starting logstash in @{mode} mode with args: @{args}" />
+			<echo message="${logstash.config.contents}" file="${build.dir}/${config.file}" />
+			<java jar="${build.dir}/${logstash.jar}" fork="true">
+				<arg line="@{args}" />
+				<jvmarg value="${java.arg.PerSize}" />
+				<jvmarg value="${java.arg.MaxPermSize}" />
+				<jvmarg value="${java.arg.Xms}" />
+				<jvmarg value="${java.arg.Xmx}" />
+			</java>
+		</sequential>
+
+	</macrodef>
+
+	<macrodef name="get-config-file" description="Gets the name of the logstash config file">
+		<attribute name="var" description="Variable property to set" />
+		<attribute name="mode" default="${mode}" description="Logstash mode, possible values are shipper, indexer" />
+		<sequential>
+			<condition property="config.file" value="@{mode}.${type}.conf">
+				<equals arg1="@{mode}" arg2="standalone" />
+			</condition>
+			<condition property="config.file" value="@{mode}.${@{mode}}.conf">
+				<equals arg1="@{mode}.${@{mode}}" arg2="centralized.indexer" />
+			</condition>
+			<condition property="config.file" value="@{mode}.${@{mode}}.${type}.conf">
+				<equals arg1="@{mode}.${@{mode}}" arg2="centralized.shipper" />
+			</condition>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="get-config-contents" description="Gets the contents of the logstash config file">
+		<attribute name="var" description="Variable property to set" />
+		<attribute name="config.file" description="Logstash config file name" />
+		<attribute name="server.file" description="Absolute path to the server log" />
+		<sequential>
+			<loadfile property="@{var}" srcFile="@{config.file}">
+				<filterchain>
+					<tokenfilter>
+						<replaceregex pattern="SERVER" replace="@{server.file}" />
+					</tokenfilter>
+				</filterchain>
+			</loadfile>
+		</sequential>
+	</macrodef>
+
+	<!-- =================================================================== -->
+	<!-- TARGETS -->
+	<!-- =================================================================== -->
+
+	<target name="-init">
+		<tstamp>
+			<format property="TIME" pattern="yyyy-MM-dd-HH-mm" locale="en" timezone="${default.timezone}" />
+		</tstamp>
+		<condition property="elasticsearch.extracted" value="true">
+			<available file="${build.dir}/${elasticsearch.file}" type="file" />
+		</condition>
+	</target>
+
+	<target name="install" depends="-init" unless="elasticsearch.extracted">
+		<mkdir dir="${build.dir}" />
+		<copy todir="${build.dir}" file="${srcdist.dir}/${elasticsearch.file}">
+		</copy>
+		<!-- ant unzip does not perserve permissions so use exec command to unzip
+			 TODO: make this windows compatible
+		 -->
+		<exec command="unzip ${build.dir}/${elasticsearch.file} -d ${build.dir}"  />
+		<basename property="elasticsearch.version" file="${srcdist.dir}/${elasticsearch.file}" suffix=".zip" />
+		<mkdir dir="${build.dir}/${name}" />
+		<move todir="${build.dir}/${name}">
+			<fileset dir="${build.dir}/${elasticsearch.version}/" />
+		</move>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+	</target>
+
+	<target name="start-elasticsearch" description="Starts logstash in standalone mode with an embedded elasticsearch. Should be used for local development.">
+		<echo message="Server starting at http://localhost:9292" />
+		<exec command="${build.dir}/${name}/bin/${name}">
+			<arg line="-f" />
+		</exec>
+	</target>
+
+</project>
