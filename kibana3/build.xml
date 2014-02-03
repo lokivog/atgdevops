@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @author Michael Vogel -->
+<project name="kibana3" basedir="." default="start-kibana3">
+
+	<!-- ======================================================================= -->
+	<!-- LOAD PROPERTIES -->
+	<!-- ======================================================================= -->
+
+	<!-- Load environment vars first -->
+	<property environment="env" />
+	<exec executable="hostname" outputproperty="hostname" />
+
+	<!-- Load hostname-specific overrides -->
+	<property file="${basedir}/builder-overrides/host-${hostname}.properties" />
+
+	<!-- Load user-specific overrides -->
+	<property file="${basedir}/builder-overrides/user-${user.name}.properties" />
+
+	<!-- Load defaults -->
+	<property file="build.properties" />
+
+	<!-- =================================================================== -->
+	<!-- TARGETS -->
+	<!-- =================================================================== -->
+
+	<target name="clean" description="Remotes the kibana3 directory">
+		<delete dir="${jboss.server.directory}/kibana3" />
+	</target>
+
+	<target name="install" description="Extracts the kibana3 source to the jboss directory">
+		<mkdir dir="${build.dir}" />
+		<copy file="${lib.dir}/${webserver}" todir="${build.dir}" />
+		<unzip src="${srcdist.dir}/${kibana3.file}" dest="${build.dir}" />
+	</target>
+
+	<target name="start-kibana3" description="Starts the jlhttp lightweight webserver for kibana3">
+		<property name="args" value="${build.dir}/${name} ${webserver.port}" />
+		<echo message="Access logs on kibana3 at http://localhost:${webserver.port}" />
+		<java jar="${build.dir}/${webserver}" fork="true">
+			<arg line="${args}" />
+			<jvmarg value="${java.arg.PerSize}" />
+			<jvmarg value="${java.arg.MaxPermSize}" />
+			<jvmarg value="${java.arg.Xms}" />
+			<jvmarg value="${java.arg.Xmx}" />
+		</java>
+	</target>
+
+</project>
