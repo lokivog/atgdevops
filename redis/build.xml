@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @author Michael Vogel -->
+<project name="redis" default="start-redis-server" basedir=".">
+
+
+	<!-- Load environment vars first -->
+	<property environment="env" />
+	<exec executable="hostname" outputproperty="hostname" />
+	<filter token="localhost.hostname" value="${hostname}" />
+
+	<!-- Load hostname-specific overrides -->
+	<property file="${basedir}/builder-overrides/host-${hostname}.properties" />
+
+	<!-- Load user-specific overrides -->
+	<property file="${basedir}/builder-overrides/user-${user.name}.properties" />
+
+	<!-- Load defaults -->
+	<property file="build.properties" />
+<!--
+	<target name="install">
+		<mkdir dir="${build.dir}" />
+		<copy todir="${build.dir}" flatten="true">
+			<fileset dir="${bin.dir}">
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}" flatten="true" file="${config.dir}/${redis.config}" />
+
+		<exec executable="chmod +x ${build.dir}/redis-server" />
+	</target>
+-->
+	<target name="start-redis-server">
+		<exec executable="${redis.server.dir}/redis-server">
+			<arg line="${redis.config}" />
+		</exec>
+	</target>
+
+</project>
