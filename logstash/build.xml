@@ -96,19 +96,19 @@
 	</target>
 
 	<target name="start-standalone" depends="build" description="Starts logstash in standalone mode with an embedded elasticsearch. Should be used for local development.">
-		<property name="logstash.args" value="agent -f ${build.dir}/${config.file} -- web" />
+		<get-config-file var="config.file" mode="${mode}" />
 		<echo message="Server starting at http://localhost:9292" />
-		<get-config-file var="config.file" mode="@{mode}" />
 		<get-config-contents var="logstash.config.contents" config.file="${config.dir}/${config.file}" server.file="${server.file}" />
 		<echo message="${logstash.config.contents}" file="${build.dir}/${config.file}" />
+		<property name="logstash.args" value="agent -f ${build.dir}/${config.file} -- web" />
 		<start-logstash args="${logstash.args}" />
 	</target>
 
 	<target name="start-centralized" depends="build" description="Starts logstash in centralized mode.">
-		<property name="logstash.args" value="agent -f ${build.dir}/${config.file}" />
-		<get-config-file var="config.file" mode="@{mode}" />
+		<get-config-file var="config.file" mode="${mode}" />
 		<get-config-contents var="logstash.config.contents" config.file="${config.dir}/${config.file}" server.file="${server.file}" />
 		<echo message="${logstash.config.contents}" file="${build.dir}/${config.file}" />
+		<property name="logstash.args" value="agent -f ${build.dir}/${config.file}" />
 		<start-logstash args="${logstash.args}" />
 	</target>
 

@@ -44,7 +44,7 @@
 		<!-- ant unzip does not perserve permissions so use exec command to unzip
 			 TODO: make this windows compatible
 		 -->
-		<exec command="unzip ${build.dir}/${elasticsearch.file} -d ${build.dir}"  />
+		<exec command="unzip ${build.dir}/${elasticsearch.file} -d ${build.dir}" />
 		<basename property="elasticsearch.version" file="${srcdist.dir}/${elasticsearch.file}" suffix=".zip" />
 		<mkdir dir="${build.dir}/${name}" />
 		<move todir="${build.dir}/${name}">
@@ -54,6 +54,10 @@
 
 	<target name="clean">
 		<delete dir="${build.dir}" />
+	</target>
+
+	<target name="clean-data">
+		<delete dir="${build.dir}/${name}/data" />
 	</target>
 
 	<target name="start-elasticsearch" description="Starts logstash in standalone mode with an embedded elasticsearch. Should be used for local development.">
