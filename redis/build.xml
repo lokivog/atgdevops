@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @author Michael Vogel -->
-<project name="redis" default="start-redis-server" basedir=".">
+<project name="redis" default="start" basedir=".">
 
 
 	<!-- Load environment vars first -->
@@ -16,7 +16,7 @@
 
 	<!-- Load defaults -->
 	<property file="build.properties" />
-<!--
+	<!--
 	<target name="install">
 		<mkdir dir="${build.dir}" />
 		<copy todir="${build.dir}" flatten="true">
@@ -28,9 +28,15 @@
 		<exec executable="chmod +x ${build.dir}/redis-server" />
 	</target>
 -->
-	<target name="start-redis-server">
+	<target name="start">
 		<exec executable="${redis.server.dir}/redis-server">
 			<arg line="${redis.config}" />
+		</exec>
+	</target>
+
+	<target name="stop">
+		<exec executable="${redis.server.dir}/redis-cli">
+			<arg line="shutdown" />
 		</exec>
 	</target>
 
