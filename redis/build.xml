@@ -29,14 +29,12 @@
 	</target>
 -->
 	<target name="start">
-		<exec executable="${redis.server.dir}/redis-server">
-			<arg line="${redis.config}" />
+		<exec executable="${redis.server.dir}/start_redis.sh">
 		</exec>
 	</target>
 
 	<target name="stop">
-		<exec executable="${redis.server.dir}/redis-cli">
-			<arg line="shutdown" />
+		<exec executable="${redis.server.dir}/stop_redis.sh">
 		</exec>
 	</target>
 

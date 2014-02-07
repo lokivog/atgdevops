@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @author Michael Vogel -->
-<project name="kibana3" basedir="." default="start-kibana3">
+<project name="kibana3" basedir="." default="start">
 
 	<!-- ======================================================================= -->
 	<!-- LOAD PROPERTIES -->
@@ -33,7 +33,7 @@
 		<unzip src="${srcdist.dir}/${kibana3.file}" dest="${build.dir}" />
 	</target>
 
-	<target name="start-kibana3" description="Starts the jlhttp lightweight webserver for kibana3">
+	<target name="start" description="Starts the jlhttp lightweight webserver for kibana3">
 		<property name="args" value="${build.dir}/${name} ${webserver.port}" />
 		<echo message="Access logs on kibana3 at http://localhost:${webserver.port}" />
 		<java jar="${build.dir}/${webserver}" fork="true">

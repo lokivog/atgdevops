@@ -115,6 +115,13 @@
 		<delete dir="${build.dir}" />
 	</target>
 
+	<target name="start" depends="build" description="Starts logstash in standalone mode with an embedded elasticsearch. Should be used for local development.">
+		<property name="mode.type" value="${mode}" />
+		<copy-configs mode="${mode.type}" />
+		<property name="logstash.args" value="agent -f ${build.dir}/${mode.type}" />
+		<start-logstash args="${logstash.args}" />
+	</target>
+
 	<target name="start-standalone" depends="build" description="Starts logstash in standalone mode with an embedded elasticsearch. Should be used for local development.">
 		<property name="mode.type" value="standalone" />
 		<copy-configs mode="${mode.type}" />
