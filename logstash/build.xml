@@ -41,6 +41,12 @@
 
 	</macrodef>
 
+	<macrodef name="build-all" description="Copies the config file to the config build dir">
+		<sequential>
+
+		</sequential>
+	</macrodef>
+
 	<macrodef name="copy-configs" description="Copies the config file to the config build dir">
 		<attribute name="mode" default="${mode}" description="Logstash mode, possible values are shipper, indexer" />
 		<sequential>
@@ -107,12 +113,34 @@
 
 	<target name="build" depends="-init">
 		<mkdir dir="${build.dir}" />
-		<copy file="${lib.dir}/${logstash.jar}" todir="${build.dir}">
+		<copy file="${lib.dir}/${logstash.jar}" todir="${build.dir}" />
+		<copy todir="${build.dir}/${bin.dir}">
+			<fileset dir="${bin.dir}">
+				<include name="*.sh" />
+			</fileset>
 		</copy>
+	</target>
+
+	<target name="dist" depends="build">
+		<for param="var" list="${modes}">
+			<sequential>
+				<copy-configs mode="@{var}" />
+			</sequential>
+		</for>
+		<mkdir dir="${dist.dir}" />
+		<tar destfile="${dist.dir}/${dist.file.name}.tar.gz" longfile="gnu" compression="gzip">
+			<tarfileset dir="${build.dir}">
+				<exclude name="**/*.sh" />
+			</tarfileset>
+			<tarfileset dir="${build.dir}" filemode="755">
+				<include name="**/*.sh" />
+			</tarfileset>
+		</tar>
 	</target>
 
 	<target name="clean">
 		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
 	</target>
 
 	<target name="start" depends="build" description="Starts logstash in standalone mode with an embedded elasticsearch. Should be used for local development.">
