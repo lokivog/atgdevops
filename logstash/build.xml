@@ -41,9 +41,22 @@
 
 	</macrodef>
 
-	<macrodef name="build-all" description="Copies the config file to the config build dir">
+	<macrodef name="copy-config" description="Copies the config file to the config build dir">
+		<attribute name="mode" default="${mode}" description="Logstash mode, possible values are shipper, indexer" />
 		<sequential>
-
+			<for param="var" list="${@{mode}.filters}">
+				<sequential>
+					<local name="config.file" />
+					<condition property="config.file" value="overrides/filter.@{var}.${hostname}.conf" else="filter.@{var}.conf">
+						<available file="${config.dir}/filters/overrides/filter.@{var}.${hostname}.conf" />
+					</condition>
+					<copy todir="${build.dir}/@{mode}" flatten="true">
+						<fileset dir="${config.dir}/filters">
+							<include name="${config.file}" />
+						</fileset>
+					</copy>
+				</sequential>
+			</for>
 		</sequential>
 	</macrodef>
 
@@ -51,7 +64,6 @@
 		<attribute name="mode" default="${mode}" description="Logstash mode, possible values are shipper, indexer" />
 		<sequential>
 			<echo message="Copy from ${@{mode}.inputs}" />
-			<delete dir="${build.dir}/@{mode}" />
 			<mkdir dir="${build.dir}/@{mode}" />
 			<for param="var" list="${@{mode}.inputs}">
 				<sequential>
@@ -119,6 +131,10 @@
 				<include name="*.sh" />
 			</fileset>
 		</copy>
+	</target>
+
+	<target name="update-filters">
+		<copy-config mode="${mode}" />
 	</target>
 
 	<target name="dist" depends="build">
