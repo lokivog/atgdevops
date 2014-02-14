@@ -41,27 +41,9 @@
 
 	</macrodef>
 
-	<macrodef name="copy-config" description="Copies the config file to the config build dir">
-		<attribute name="mode" default="${mode}" description="Logstash mode, possible values are shipper, indexer" />
-		<sequential>
-			<for param="var" list="${@{mode}.filters}">
-				<sequential>
-					<local name="config.file" />
-					<condition property="config.file" value="overrides/filter.@{var}.${hostname}.conf" else="filter.@{var}.conf">
-						<available file="${config.dir}/filters/overrides/filter.@{var}.${hostname}.conf" />
-					</condition>
-					<copy todir="${build.dir}/@{mode}" flatten="true">
-						<fileset dir="${config.dir}/filters">
-							<include name="${config.file}" />
-						</fileset>
-					</copy>
-				</sequential>
-			</for>
-		</sequential>
-	</macrodef>
-
 	<macrodef name="copy-configs" description="Copies the config file to the config build dir">
 		<attribute name="mode" default="${mode}" description="Logstash mode, possible values are shipper, indexer" />
+		<attribute name="host.override" default="true" description="If true, uses the hostname override file, otherwise it does not" />
 		<sequential>
 			<echo message="Copy from ${@{mode}.inputs}" />
 			<mkdir dir="${build.dir}/@{mode}" />
@@ -69,7 +51,12 @@
 				<sequential>
 					<local name="config.file" />
 					<condition property="config.file" value="overrides/input.@{var}.${hostname}.conf" else="input.@{var}.conf">
-						<available file="${config.dir}/inputs/overrides/input.@{var}.${hostname}.conf" />
+						<and>
+							<available file="${config.dir}/inputs/overrides/input.@{var}.${hostname}.conf" />
+							<not>
+								<equals arg1="@{host.override}" arg2="false" />
+							</not>
+						</and>
 					</condition>
 					<copy todir="${build.dir}/@{mode}" flatten="true">
 						<fileset dir="${config.dir}/inputs">
@@ -137,16 +124,34 @@
 		<copy-config mode="${mode}" />
 	</target>
 
-	<target name="dist" depends="build">
+	<target name="dist-install" depends="build">
 		<for param="var" list="${modes}">
 			<sequential>
-				<copy-configs mode="@{var}" />
+				<copy-configs mode="@{var}" host.override="false" />
 			</sequential>
 		</for>
 		<mkdir dir="${dist.dir}" />
 		<tar destfile="${dist.dir}/${dist.file.name}.tar.gz" longfile="gnu" compression="gzip">
 			<tarfileset dir="${build.dir}">
 				<exclude name="**/*.sh" />
+			</tarfileset>
+			<tarfileset dir="${build.dir}" filemode="755">
+				<include name="**/*.sh" />
+			</tarfileset>
+		</tar>
+	</target>
+
+	<target name="dist-update" depends="build">
+		<for param="var" list="${modes}">
+			<sequential>
+				<copy-configs mode="@{var}" host.override="false" />
+			</sequential>
+		</for>
+		<mkdir dir="${dist.dir}" />
+		<tar destfile="${dist.dir}/${dist.file.name}.tar.gz" longfile="gnu" compression="gzip">
+			<tarfileset dir="${build.dir}">
+				<exclude name="**/*.sh" />
+				<exclude name="*.jar" />
 			</tarfileset>
 			<tarfileset dir="${build.dir}" filemode="755">
 				<include name="**/*.sh" />
