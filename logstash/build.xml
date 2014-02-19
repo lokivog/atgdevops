@@ -2,25 +2,15 @@
 <!-- @author Michael Vogel -->
 <project name="logstash" default="build" basedir=".">
 
-	<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="lib/ant/ant-contrib-1.0b3.jar" />
-
 	<!-- ======================================================================= -->
 	<!-- SET PROPERTIES -->
 	<!-- ======================================================================= -->
 
+	<property name="builder" value="../atgdevopsbuilder" />
 	<!-- Load environment vars first -->
-	<property environment="env" />
-	<exec executable="hostname" outputproperty="hostname" />
-	<filter token="localhost.hostname" value="${hostname}" />
 
-	<!-- Load hostname-specific overrides -->
-	<property file="${basedir}/builder-overrides/host-${hostname}.properties" />
-
-	<!-- Load user-specific overrides -->
-	<property file="${basedir}/builder-overrides/user-${user.name}.properties" />
-
-	<!-- Load defaults -->
-	<property file="build.properties" />
+	<!-- Load common build file -->
+	<import file="${builder}/common.xml" />
 
 	<!-- =================================================================== -->
 	<!-- MACROS -->
@@ -38,7 +28,6 @@
 				<jvmarg value="${java.arg.Xmx}" />
 			</java>
 		</sequential>
-
 	</macrodef>
 
 	<macrodef name="copy-configs" description="Copies the config file to the config build dir">
@@ -97,6 +86,9 @@
 			<replaceregexp match="REDIS_HOST" replace="${redis.host}" flags="g" byline="true">
 				<fileset dir="${build.dir}/@{mode}" includes="*" />
 			</replaceregexp>
+			<replaceregexp match="PATTERNS_DIR" replace="${build.dir}/${patterns.dir}" byline="true">
+				<fileset dir="${build.dir}/@{mode}" includes="*" />
+			</replaceregexp>
 		</sequential>
 	</macrodef>
 
@@ -116,6 +108,11 @@
 		<copy todir="${build.dir}/${bin.dir}">
 			<fileset dir="${bin.dir}">
 				<include name="*.sh" />
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}/${patterns.dir}">
+			<fileset dir="${patterns.dir}">
+				<exclude name="*.git" />
 			</fileset>
 		</copy>
 	</target>
@@ -159,12 +156,7 @@
 		</tar>
 	</target>
 
-	<target name="clean">
-		<delete dir="${build.dir}" />
-		<delete dir="${dist.dir}" />
-	</target>
-
-	<target name="start" depends="build" description="Starts logstash in standalone mode with an embedded elasticsearch. Should be used for local development.">
+	<target name="start" depends="build" description="Starts logstash">
 		<property name="mode.type" value="${mode}" />
 		<copy-configs mode="${mode.type}" />
 		<property name="logstash.args" value="agent -f ${build.dir}/${mode.type}" />
@@ -193,7 +185,7 @@
 		<start-logstash args="${logstash.args}" />
 	</target>
 
-	<target name="start-indexer" depends="build" description="Starts logstash in centralized mode.">
+	<target name="start-indexer" depends="build" description="Starts logstash in indexer mode.">
 		<property name="mode.type" value="indexer" />
 		<copy-configs mode="${mode.type}" />
 		<property name="logstash.args" value="agent -f ${build.dir}/${mode.type}" />
@@ -205,10 +197,6 @@
 		<copy-configs mode="${mode.type}" />
 		<property name="logstash.args" value="agent -f ${build.dir}/${mode.type}" />
 		<start-logstash args="${logstash.args}" />
-	</target>
-
-	<target name="test" depends="build">
-		<copy-configs mode="centralized" />
 	</target>
 
 </project>

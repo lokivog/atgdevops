@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @author Michael Vogel -->
+<project name="atgdevopsbuilder" default="start" basedir=".">
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="lib/ant-contrib-1.0b3.jar" />
+
+	<!-- ======================================================================= -->
+	<!-- SET PROPERTIES -->
+	<!-- ======================================================================= -->
+
+	<!-- Load environment vars first -->
+	<property environment="env" />
+	<exec executable="hostname" outputproperty="hostname" />
+	<filter token="localhost.hostname" value="${hostname}" />
+
+	<!-- Load defaults -->
+	<property file="build.properties" />
+
+	<property name="project.basedir" value="${basedir}/.." />
+
+	<property name="builder" value="${basedir}" />
+
+	<macrodef name="call-subant">
+		<attribute name="target" />
+		<attribute name="modules" />
+		<sequential>
+			<subant target="@{target}" inheritall="false" inheritrefs="false" antfile="${build.file}">
+				<filelist files="@{modules}" dir="${project.basedir}" />
+				<property name="builder" value="${builder}" />
+			</subant>
+		</sequential>
+	</macrodef>
+
+	<!-- =================================================================== -->
+	<!-- TARGETS -->
+	<!-- =================================================================== -->
+
+	<target name="clean" description="Copies atg modules to dynamo root">
+		<call-subant target="clean" modules="${modules}" />
+	</target>
+
+	<target name="start" description="Copies atg modules to dynamo root">
+		<call-subant target="start" modules="${modules}" />
+	</target>
+
+	<target name="build" description="Cleans the saved elasticsearch json data">
+		<call-subant target="build" modules="${modules}" />
+	</target>
+
+	<target name="shutdown" description="Shutdown elasticsearch">
+		<post to="http://localhost:9200/_shutdown" verbose="true" />
+	</target>
+
+</project>

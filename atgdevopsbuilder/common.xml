@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @author Michael Vogel -->
+<project name="common">
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${builder}/lib/ant-contrib-1.0b3.jar" />
+
+	<!-- ======================================================================= -->
+	<!-- SET PROPERTIES -->
+	<!-- ======================================================================= -->
+
+	<!-- Load environment vars first -->
+	<property environment="env" />
+	<exec executable="hostname" outputproperty="hostname" />
+	<filter token="localhost.hostname" value="${hostname}" />
+
+	<!-- Load common properties specific to all projects that should not have to change -->
+	<property file="${builder}/common.properties" />
+
+	<!-- Load hostname-specific overrides -->
+	<property file="${basedir}/builder-overrides/host-${hostname}.properties" />
+
+	<!-- Load user-specific overrides -->
+	<property file="${basedir}/builder-overrides/user-${user.name}.properties" />
+
+	<!-- Load defaults -->
+	<property file="build.properties" />
+
+	<!-- =================================================================== -->
+	<!-- MACROS -->
+	<!-- =================================================================== -->
+
+
+	<!-- =================================================================== -->
+	<!-- TARGETS -->
+	<!-- =================================================================== -->
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+	</target>
+
+	<target name="-server-running">
+		<waitfor maxwait="${process.timeout}" maxwaitunit="second" timeoutproperty="server.down">
+			<http url="http://localhost:${server.port}" />
+		</waitfor>
+	</target>
+
+</project>

@@ -1,0 +1,1 @@
+JBOSSLOGMSG "%{TIMESTAMP_ISO8601:timestamp}%{SPACE}%{LOGLEVEL:level}\s+\[%{DATA:className}\]%{SPACE}%{GREEDYDATA:message}

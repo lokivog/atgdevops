@@ -1,43 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @author Michael Vogel -->
-<project name="elasticsearch" default="start-elasticsearch" basedir=".">
+<project name="elasticsearch" default="start" basedir=".">
 
 	<!-- ======================================================================= -->
 	<!-- SET PROPERTIES -->
 	<!-- ======================================================================= -->
 
+	<property name="builder" value="../atgdevopsbuilder" />
 	<!-- Load environment vars first -->
-	<property environment="env" />
-	<exec executable="hostname" outputproperty="hostname" />
-	<filter token="localhost.hostname" value="${hostname}" />
 
-	<!-- Load hostname-specific overrides -->
-	<property file="${basedir}/builder-overrides/host-${hostname}.properties" />
+	<!-- Load common build file -->
+	<import file="${builder}/common.xml" />
 
-	<!-- Load user-specific overrides -->
-	<property file="${basedir}/builder-overrides/user-${user.name}.properties" />
-
-	<!-- Load defaults -->
-	<property file="build.properties" />
-
-	<!-- =================================================================== -->
-	<!-- MACROS -->
-	<!-- =================================================================== -->
+	<condition property="elasticsearch.extracted" value="true">
+		<available file="${build.dir}/${elasticsearch.file}" type="file" />
+	</condition>
 
 	<!-- =================================================================== -->
 	<!-- TARGETS -->
 	<!-- =================================================================== -->
 
-	<target name="-init">
-		<tstamp>
-			<format property="TIME" pattern="yyyy-MM-dd-HH-mm" locale="en" timezone="${default.timezone}" />
-		</tstamp>
-		<condition property="elasticsearch.extracted" value="true">
-			<available file="${build.dir}/${elasticsearch.file}" type="file" />
-		</condition>
-	</target>
 
-	<target name="install" depends="-init" unless="elasticsearch.extracted">
+
+	<target name="build" unless="elasticsearch.extracted">
 		<mkdir dir="${build.dir}" />
 		<copy todir="${build.dir}" file="${srcdist.dir}/${elasticsearch.file}">
 		</copy>
@@ -52,19 +37,23 @@
 		</move>
 	</target>
 
-	<target name="clean">
-		<delete dir="${build.dir}" />
-	</target>
-
-	<target name="clean-data">
+	<target name="clean-data" description="Cleans the saved elasticsearch json data">
 		<delete dir="${build.dir}/${name}/data" />
 	</target>
 
-	<target name="start-elasticsearch" description="Starts logstash in standalone mode with an embedded elasticsearch. Should be used for local development.">
-		<echo message="Server starting at http://localhost:9292" />
-		<exec command="${build.dir}/${name}/bin/${name}">
-			<arg line="-f" />
+	<target name="start" depends="build,-server-running" if="server.down" description="Starts elasticsearch">
+		<echo message="elasticsearch server.up ${server.down}" />
+		<echo message="Server starting at http://localhost:${server.port}" />
+		<condition property="exec.args" value="-f" else="">
+			<equals arg1="${foreground}" arg2="true" />
+		</condition>
+		<exec executable="${build.dir}/${exec.dir}/${exec.file}" osfamily="unix">
+			<arg line="${exec.args}" />
 		</exec>
+	</target>
+
+	<target name="shutdown" description="Shutdown elasticsearch">
+		<post to="http://localhost:9200/_shutdown" verbose="true" />
 	</target>
 
 </project>
