@@ -127,6 +127,7 @@
 				<copy-configs mode="@{var}" host.override="false" />
 			</sequential>
 		</for>
+		<copy file="${build.dir}/jboss/filter.jboss.conf" todir="${build.dir}" />
 		<mkdir dir="${dist.dir}" />
 		<tar destfile="${dist.dir}/${dist.file.name}.tar.gz" longfile="gnu" compression="gzip">
 			<tarfileset dir="${build.dir}">
@@ -144,6 +145,7 @@
 				<copy-configs mode="@{var}" host.override="false" />
 			</sequential>
 		</for>
+		<copy file="${build.dir}/jboss/filter.jboss.conf" todir="${build.dir}" />
 		<mkdir dir="${dist.dir}" />
 		<tar destfile="${dist.dir}/${dist.file.name}.tar.gz" longfile="gnu" compression="gzip">
 			<tarfileset dir="${build.dir}">

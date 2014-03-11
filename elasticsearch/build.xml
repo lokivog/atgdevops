@@ -16,20 +16,32 @@
 		<available file="${build.dir}/${elasticsearch.file}" type="file" />
 	</condition>
 
+	<condition property="isUnix" value="true">
+		<os family="unix" />
+	</condition>
+
+	<condition property="isWin" value="true">
+		<os family="windows" />
+	</condition>
+
 	<!-- =================================================================== -->
 	<!-- TARGETS -->
 	<!-- =================================================================== -->
 
 
-
-	<target name="build" unless="elasticsearch.extracted">
+	<target name="-unzip-unix" if="isUnix" unless="elasticsearch.extracted">
 		<mkdir dir="${build.dir}" />
-		<copy todir="${build.dir}" file="${srcdist.dir}/${elasticsearch.file}">
-		</copy>
-		<!-- ant unzip does not perserve permissions so use exec command to unzip
-			 TODO: make this windows compatible
-		 -->
+		<copy todir="${build.dir}" file="${srcdist.dir}/${elasticsearch.file}" />
 		<exec command="unzip ${build.dir}/${elasticsearch.file} -d ${build.dir}" />
+	</target>
+
+	<target name="-unzip-win" if="isWin" unless="elasticsearch.extracted">
+		<mkdir dir="${build.dir}" />
+		<copy todir="${build.dir}" file="${srcdist.dir}/${elasticsearch.file}" />
+		<unzip src="${build.dir}/${elasticsearch.file}" dest="${build.dir}" />
+	</target>
+
+	<target name="build" depends="-unzip-unix,-unzip-win" unless="elasticsearch.extracted">
 		<basename property="elasticsearch.version" file="${srcdist.dir}/${elasticsearch.file}" suffix=".zip" />
 		<mkdir dir="${build.dir}/${name}" />
 		<move todir="${build.dir}/${name}">
@@ -47,13 +59,25 @@
 		<condition property="exec.args" value="-f" else="">
 			<equals arg1="${foreground}" arg2="true" />
 		</condition>
+		<condition property="spawn" value="false" else="true">
+			<equals arg1="${foreground}" arg2="true" />
+		</condition>
 		<exec executable="${build.dir}/${exec.dir}/${exec.file}" osfamily="unix">
 			<arg line="${exec.args}" />
 		</exec>
+		<exec executable="${build.dir}/${exec.dir}/${exec.file}.bat" osfamily="windows" spawn="${spawn}">
+		</exec>
 	</target>
-
+	
 	<target name="shutdown" description="Shutdown elasticsearch">
 		<post to="http://localhost:9200/_shutdown" verbose="true" />
+	</target>
+
+	<target name="query-es" description="Queries the elasticsearch instances. Used primarily to test if the server is running">
+		<post to="http://localhost:9200/_search" verbose="true" failonerror="true">
+			<prop name="pretty" value="1" />
+			<prop name="q" value="*" />
+		</post>
 	</target>
 
 </project>

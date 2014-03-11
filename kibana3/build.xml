@@ -31,7 +31,8 @@
 
 	<target name="start" depends="build,-server-running" if="server.down" description="Starts the jlhttp lightweight webserver for kibana3">
 		<echo message="kibana3 server.up ${server.down}" />
-		<property name="args" value="${build.dir}/${name} ${server.port}" />
+		<!--  <property name="args" value="${build.dir}/${name} ${server.port}" />  -->
+		<property name="args" value="/home/atgdev/github/grafana ${server.port}" />
 		<echo message="Access logs on kibana3 at http://localhost:${server.port}" />
 		<java jar="${build.dir}/${webserver}" fork="true" spawn="true" >
 			<arg line="${args}" />
