@@ -19,7 +19,7 @@
 	<!-- =================================================================== -->
 	<!-- TARGETS -->
 	<!-- =================================================================== -->
-	
+
 
 
 
@@ -34,13 +34,25 @@
 		<!--  <property name="args" value="${build.dir}/${name} ${server.port}" />  -->
 		<property name="args" value="/home/atgdev/github/grafana ${server.port}" />
 		<echo message="Access logs on kibana3 at http://localhost:${server.port}" />
-		<java jar="${build.dir}/${webserver}" fork="true" spawn="true" >
+		<java jar="${build.dir}/${webserver}" fork="true" spawn="true">
 			<arg line="${args}" />
 			<jvmarg value="${java.arg.PerSize}" />
 			<jvmarg value="${java.arg.MaxPermSize}" />
 			<jvmarg value="${java.arg.Xms}" />
 			<jvmarg value="${java.arg.Xmx}" />
 		</java>
+	</target>
+
+	<target name="dist" depends="build" description="gzips kibana for distribution">
+		<mkdir dir="${dist.dir}" />
+		<tar destfile="${dist.dir}/${dist.file.name}.tar.gz" longfile="gnu" compression="gzip">
+			<tarfileset dir="${build.dir}">
+				<exclude name="**/*.sh" />
+			</tarfileset>
+			<tarfileset dir="${build.dir}" filemode="755">
+				<include name="**/*.sh" />
+			</tarfileset>
+		</tar>
 	</target>
 
 </project>
