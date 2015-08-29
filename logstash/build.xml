@@ -115,6 +115,7 @@
 				<exclude name="*.git" />
 			</fileset>
 		</copy>
+		<copy-configs />
 	</target>
 
 	<target name="update-filters">
